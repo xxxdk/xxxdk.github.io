@@ -4,33 +4,6 @@
   
   
   <entry>
-    <title>SD卡相关寄存器简介</title>
-    <link href="/xxx/2021/10/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B/"/>
-    <url>/xxx/2021/10/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B/</url>
-    
-    <content type="html"><![CDATA[<p>SD Association制定了 SD卡、SDIO的相关的标准，目前物理层协议已经发展到 8.0，它定义了六个 SD卡接口寄存器，OCR、CID、CSD、RCA、DSR、SCR以及没直接说明的 SSR和 CSR。</p><h4 id="OCR"><a href="#OCR" class="headerlink" title="OCR"></a>OCR</h4><p>工作条件寄存器，Operation conditions register，32 bits。通过 CMD1（SEND_OP_COND）获取，在 CMD线上传输，包括以下信息：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-OCR.webp" alt="OCR"></p><p>对比 eMMC的 OCR寄存器还是有相似性的，目前常用的是 SDHC/SDXC卡，主要关注</p><p>bit [31]，忙状态位，在 device初始化完成后置位；</p><p>bit [30]，0是 SDSC卡，1则是 SDHC/SDXC卡；</p><p>bit [29]，1则是 UHS-II卡；</p><p>bit [24]，置位则表示 device接受 ACMD41设置 1.8V为工作电压；</p><p>bit [23:15]，表示 device支持的电压，基本是 High Speed mode用的；</p><p>bit [7]，预留给低电压。现在 UHS-I mode的工作电压就是 1.8V，但这个 bit在 physical layer version 8.00还是没有描述。</p><h4 id="CID"><a href="#CID" class="headerlink" title="CID"></a>CID</h4><p>卡识别寄存器，Card IDentification register，128 bits。通过 CMD2（ALL_SEND_CID）或 CMD10（SEND_CID）获取，在 CMD线上传输。CMD2在 Ready State阶段获取，CMD10在 Stand-by State阶段使用，并且需要指定 RCA。CID寄存器的值是唯一的，常用于产品身份识别、key的派生等。CID寄存器包括以下信息：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CID.webp" alt="CID"></p><h4 id="CSD"><a href="#CSD" class="headerlink" title="CSD"></a>CSD</h4><p>卡特性数据寄存器，Card-Specific Data register，128 bits。通过 CMD9（SEND_CSD）获取。CSD寄存器提供了 device内容访问方式的信息，定义了块大小，SD卡容量大小、数据格式、纠错类型、最长数据访问时间、数据传输速度、DSR寄存器是否可用等。可以通过 CMD27（PROGRAM_CSD）对可编程部分（marked by W/E）进行修改。更多详细信息可查看协议 5.3 CSD Register。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CSD%20structure.webp" alt="CSD structure"></p><p>bit [127:126]，CSD_STRUCTURE，描述 CSD register的版本，0x0为 Version 1.0对应 SDSC，0x1为 Version 2.0对应 SDHC/SDXC，0x2为 Version 3.0对应 SDUC。</p><p>下图是 CSD register (Version 2.0)：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CSD%202.0.webp" alt="CSD 2.0"></p><p>bit [95:84]，卡支持的命令集，12 bits。目前定义了 12种命令集，所有版本的 SD卡必须支持 Class 0，2，4，5和 8，SDHC、SDXC、SDUC还需要支持 Class 7，支持哪个 Class就需要在对应的 bit置1。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CCC.webp" alt="CCC"></p><p>bit [69:48]，C_SIZE，卡容量，22 bits，计算方法是 C_SIZE+1乘 2的 READ_BL_LEN次方。例如，用 SDHC卡最大容量 32GB - 80MB计算，则 C_SIZE是 0x00ff5f（65375），即 65376 * 512 / 1024 /1024 = 31.921875‬GB。</p><h4 id="RCA"><a href="#RCA" class="headerlink" title="RCA"></a>RCA</h4><p>相对地址寄存器，Relative card address register，16 bits。通过 CMD3（SET_RELATIVE_ADDR）设置。host在 Identification State阶段对 device设置地址，用于后续的通信。</p><h4 id="DSR"><a href="#DSR" class="headerlink" title="DSR"></a>DSR</h4><p>Driver stage register，16 bits，通过 CMD4（SET_DSR）配置。在 SD中，这个寄存器是可选的，不一定需要实现。它可选择性地用于改善总线在扩展工作条件下的性能（取决于总线长度、传输速率或设备数量等参数）。具体影响 CMD和 DAT的总线驱动器中的预驱动级（ pre-driver stage）和互补驱动晶体管，配置预驱动级的输出电压的上升和下降时间和互补驱动晶体管的数量。实际场景还未遇到需要配置的情况。</p><h4 id="SCR"><a href="#SCR" class="headerlink" title="SCR"></a>SCR</h4><p>SD卡配置寄存器，SD CARD Configuration Register，64 bits，通过 ACMD51（SEND_SCR），从 DAT线读回。具体描述了 SD卡的版本、总线宽度、数据擦除后颗粒是 “0”或 “1”等。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-SCR.webp" alt="SCR"></p><p>bit [59:56]（SD_SPEC）、bit [47]（SD_SPEC3）、bit [42]（SD_SPEC4）、bit [41:38]（SD_SPECX），可以用于判断 SD卡的版本，不过常用的 SDXC/UHS-I mode的卡只需用上 SD_SPEC和 SD_SPEC3。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-SCR_SPEC.webp" alt="SCR_SPEC"></p><p>bit [35:32]，CMD_SUPPORT，支持 CMD20、CMD23、CMD48/49、CMD58/59会在这里有具体的 bit描述，当然首先要支持对应的 CCC（Card Command Class）。</p><h4 id="SSR"><a href="#SSR" class="headerlink" title="SSR"></a>SSR</h4><p>SD 状态寄存器，SD Status register，512 bits， 通过 ACMD13（SD_STATUS），从 DAT线读回。描述有总线位宽、速度等级、保护区域大小、擦除相关参数等，具体查看协议 4.10.2 SD Status。</p><h4 id="CSR"><a href="#CSR" class="headerlink" title="CSR"></a>CSR</h4><p>SD卡状态寄存器，Card Status，32 bits，通过 CMD13（SEND_STATUS），从 CMD线读回，response为 R1。描述卡是否发生了什么错误或者处于什么状态，例如 bit [29]，传输设置的块长度是否与卡匹配；bit [27]，擦除目的块无效；bit [25]，卡是否上锁；bit [20]，卡内部控制器是否出错；具体看协议 4.10.2 Card Status。</p>]]></content>
-    
-    
-    <categories>
-      
-      <category>技术</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>sdhci</tag>
-      
-      <tag>sd card</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>sdhci_set_transfer_mode函数解析</title>
     <link href="/xxx/2021/01/sdhci-set-transfer-mode%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90/"/>
     <url>/xxx/2021/01/sdhci-set-transfer-mode%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90/</url>
@@ -48,6 +21,58 @@
     <tags>
       
       <tag>sdhci</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>2021年新年音乐会</title>
+    <link href="/xxx/2020/12/2021%E5%B9%B4%E6%96%B0%E5%B9%B4%E9%9F%B3%E4%B9%90%E4%BC%9A/"/>
+    <url>/xxx/2020/12/2021%E5%B9%B4%E6%96%B0%E5%B9%B4%E9%9F%B3%E4%B9%90%E4%BC%9A/</url>
+    
+    <content type="html"><![CDATA[<h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>12月28日，傍晚，伴着许久未见的火烧云出发了，昏暗的车厢外橙黄的天空让人放下手机，静静的欣赏沿途的风景。快节奏的深圳，我有多久没有慢下来呢？想想都心累。点缀着加班人灯光的摩天大楼慢慢进入眼帘，而远处又是缤纷的霓虹和平安的大宝剑。班车从龙岗开到福田核心区，一路的风景给我一种乡巴佬进城的错觉，明明我也是在“坂田CBD”搬砖的呀。嗯，大概就这样了，路上并没有遇上塞车，我们得以提前一个半小时，从 D区到了深圳音乐厅，这是秘书小姐姐没有想到的事情。想想上次欣赏高雅艺术还是三年前了，那时候还在顺德搬砖。</p><p>一个半小时的时间，我还是在深圳音乐厅附近转了下，拍了两张具体不错的照片。</p><p><img src="http://pic.xxxdk.xyz/2021%E5%B9%B4%E6%96%B0%E5%B9%B4%E9%9F%B3%E4%B9%90%E4%BC%9A-1.webp" alt="市民中心"></p><p><img src="http://pic.xxxdk.xyz/2021%E5%B9%B4%E6%96%B0%E5%B9%B4%E9%9F%B3%E4%B9%90%E4%BC%9A-2.webp" alt="深圳市当代艺术与城市规划馆"></p><h4 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h4><p>进入会场前，准备中场休息时喝的水被要求寄存了，这个也无所谓，毕竟当前还是学习摸索阶段。全程都有人专门指引座位，不知道是防疫要求还是担心低价位入座高价位区域，能感觉到工作人员对这方面明显的控制。进入厅内，发现整个音乐厅，除了管风琴位置，都安排了座位，山脚到山顶的坡度还是蛮陡，而我在山腰。事后觉得还是山脚好，加钱也应该到山下。一个原因是山腰听到的是音箱放出来的，虽然也不排除山脚感受差不多；另外一个原因是太远了，什么都看不到，我理解观看指挥和乐手们的演奏也是很重要的，不然中间会有点无聊。不过整体体验不错，时间还是过得很快的。</p><p>这次音乐会是由长影乐团演奏，指挥是曲鑫。长影乐团，长春电影制片厂交响乐团，新中国第一支国家级电影交响乐团。70多年中，共为 700余部电影创作录制音乐作品，如《上甘岭》中的《我的祖国》，后面的返场曲目就有这首经典之作。</p><p>整体下来，虽然没有听得意犹未尽，也有点心潮澎湃，打满了鸡血，明天可以努力加班了，觉得每年听两到三次音乐会还是很有价值的。</p><p>这次音乐会遇到了之前大概知道的一件事情，演奏家的多次谢幕，满满的套路呀，感觉大家把手都拍麻了。乐团也没让大家失望，返场曲目演奏了三首《我的祖国》、《将军令》和《卡门序曲》。《将军令》对比林子祥的《男儿当自强》，还是喜欢后者多点，中气十足的人声也是很重要的。</p><h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>发现很多事情还是值得吐槽的，厅内手机完全没信号，身边有人想要连 WiFi，全程安静的听音乐会，你用手机是要干啥？演奏过程中，也有人时不时的拍照，录像，不戴口罩，或者是说话沟通。拍照录像，出来的结果画质和音质都十分惊人，为啥不去网上把维也纳新年音乐会的 BD下回来，搭个 7.1环绕好好欣赏呢？不戴口罩的人都被工作人员提醒 N+1次了，呼吸困难建议回家隔离，真是大写的尴尬。说话的就没啥好吐槽了，毕竟你说啥，大家都听得很清楚，该安静的时候，会场都很寂静。</p><p>当然自己也有不足的地方，那么多曲目都没有预习下，不明白其大意，听得事后有种一知半解的味道。古典音乐会相关知识还有很多，有空还得多接触、学习。</p><h4 id="节目单"><a href="#节目单" class="headerlink" title="节目单"></a>节目单</h4><p>1、管弦乐《千人之力》</p><p>2、管弦乐《卡门序曲》选自歌剧《卡门》</p><p>3、女声独唱《亲爱的爸爸》选自歌剧《贾尼·斯基基》唱段</p><p>4、管弦乐《拉科齐进行曲》</p><p>5、管弦乐《快速列车波尔卡》</p><p>6、萨克斯与乐队《我心永恒》选自影片《泰坦尼克号》主题音乐</p><p>7、管弦乐《威廉退尔序曲》</p><p>8、管弦乐《马刀舞曲》选自芭蕾舞剧《加雅涅》舞曲</p><p>9、管弦乐《雷电波尔卡》</p><p>10、男声独唱《我的太阳》意大利民歌</p><p>11、男女声二重唱《饮酒歌》选自歌剧《茶花女》唱段</p><p>12、管弦乐《He’s A Pirate》选自影片《加勒比海盗》主题音乐</p><p>13、管弦乐《蓝色多瑙河》圆舞曲</p><p>14、管弦乐《天堂与地狱》选自轻歌剧《地狱中的奥菲欧》序曲</p><p>返场曲目</p><p>1、管弦乐《我的祖国》</p><p>2、管弦乐《将军令》</p><p>3、管弦乐《卡门序曲》选自歌剧《卡门》</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>生活</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>音乐会</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>SD卡相关寄存器简介</title>
+    <link href="/xxx/2020/10/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B/"/>
+    <url>/xxx/2020/10/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B/</url>
+    
+    <content type="html"><![CDATA[<p>SD Association制定了 SD卡、SDIO的相关的标准，目前物理层协议已经发展到 8.0，它定义了六个 SD卡接口寄存器，OCR、CID、CSD、RCA、DSR、SCR以及没直接说明的 SSR和 CSR。</p><h4 id="OCR"><a href="#OCR" class="headerlink" title="OCR"></a>OCR</h4><p>工作条件寄存器，Operation conditions register，32 bits。通过 CMD1（SEND_OP_COND）获取，在 CMD线上传输，包括以下信息：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-OCR.webp" alt="OCR"></p><p>对比 eMMC的 OCR寄存器还是有相似性的，目前常用的是 SDHC/SDXC卡，主要关注</p><p>bit [31]，忙状态位，在 device初始化完成后置位；</p><p>bit [30]，0是 SDSC卡，1则是 SDHC/SDXC卡；</p><p>bit [29]，1则是 UHS-II卡；</p><p>bit [24]，置位则表示 device接受 ACMD41设置 1.8V为工作电压；</p><p>bit [23:15]，表示 device支持的电压，基本是 High Speed mode用的；</p><p>bit [7]，预留给低电压。现在 UHS-I mode的工作电压就是 1.8V，但这个 bit在 physical layer version 8.00还是没有描述。</p><h4 id="CID"><a href="#CID" class="headerlink" title="CID"></a>CID</h4><p>卡识别寄存器，Card IDentification register，128 bits。通过 CMD2（ALL_SEND_CID）或 CMD10（SEND_CID）获取，在 CMD线上传输。CMD2在 Ready State阶段获取，CMD10在 Stand-by State阶段使用，并且需要指定 RCA。CID寄存器的值是唯一的，常用于产品身份识别、key的派生等。CID寄存器包括以下信息：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CID.webp" alt="CID"></p><h4 id="CSD"><a href="#CSD" class="headerlink" title="CSD"></a>CSD</h4><p>卡特性数据寄存器，Card-Specific Data register，128 bits。通过 CMD9（SEND_CSD）获取。CSD寄存器提供了 device内容访问方式的信息，定义了块大小，SD卡容量大小、数据格式、纠错类型、最长数据访问时间、数据传输速度、DSR寄存器是否可用等。可以通过 CMD27（PROGRAM_CSD）对可编程部分（marked by W/E）进行修改。更多详细信息可查看协议 5.3 CSD Register。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CSD%20structure.webp" alt="CSD structure"></p><p>bit [127:126]，CSD_STRUCTURE，描述 CSD register的版本，0x0为 Version 1.0对应 SDSC，0x1为 Version 2.0对应 SDHC/SDXC，0x2为 Version 3.0对应 SDUC。</p><p>下图是 CSD register (Version 2.0)：</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CSD%202.0.webp" alt="CSD 2.0"></p><p>bit [95:84]，卡支持的命令集，12 bits。目前定义了 12种命令集，所有版本的 SD卡必须支持 Class 0，2，4，5和 8，SDHC、SDXC、SDUC还需要支持 Class 7，支持哪个 Class就需要在对应的 bit置1。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-CCC.webp" alt="CCC"></p><p>bit [69:48]，C_SIZE，卡容量，22 bits，计算方法是 C_SIZE+1乘 2的 READ_BL_LEN次方。例如，用 SDHC卡最大容量 32GB - 80MB计算，则 C_SIZE是 0x00ff5f（65375），即 65376 * 512 / 1024 /1024 = 31.921875‬GB。</p><h4 id="RCA"><a href="#RCA" class="headerlink" title="RCA"></a>RCA</h4><p>相对地址寄存器，Relative card address register，16 bits。通过 CMD3（SET_RELATIVE_ADDR）设置。host在 Identification State阶段对 device设置地址，用于后续的通信。</p><h4 id="DSR"><a href="#DSR" class="headerlink" title="DSR"></a>DSR</h4><p>Driver stage register，16 bits，通过 CMD4（SET_DSR）配置。在 SD中，这个寄存器是可选的，不一定需要实现。它可选择性地用于改善总线在扩展工作条件下的性能（取决于总线长度、传输速率或设备数量等参数）。具体影响 CMD和 DAT的总线驱动器中的预驱动级（ pre-driver stage）和互补驱动晶体管，配置预驱动级的输出电压的上升和下降时间和互补驱动晶体管的数量。实际场景还未遇到需要配置的情况。</p><h4 id="SCR"><a href="#SCR" class="headerlink" title="SCR"></a>SCR</h4><p>SD卡配置寄存器，SD CARD Configuration Register，64 bits，通过 ACMD51（SEND_SCR），从 DAT线读回。具体描述了 SD卡的版本、总线宽度、数据擦除后颗粒是 “0”或 “1”等。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-SCR.webp" alt="SCR"></p><p>bit [59:56]（SD_SPEC）、bit [47]（SD_SPEC3）、bit [42]（SD_SPEC4）、bit [41:38]（SD_SPECX），可以用于判断 SD卡的版本，不过常用的 SDXC/UHS-I mode的卡只需用上 SD_SPEC和 SD_SPEC3。</p><p><img src="http://pic.xxxdk.xyz/SD%E5%8D%A1%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8%E7%AE%80%E4%BB%8B-SCR_SPEC.webp" alt="SCR_SPEC"></p><p>bit [35:32]，CMD_SUPPORT，支持 CMD20、CMD23、CMD48/49、CMD58/59会在这里有具体的 bit描述，当然首先要支持对应的 CCC（Card Command Class）。</p><h4 id="SSR"><a href="#SSR" class="headerlink" title="SSR"></a>SSR</h4><p>SD 状态寄存器，SD Status register，512 bits， 通过 ACMD13（SD_STATUS），从 DAT线读回。描述有总线位宽、速度等级、保护区域大小、擦除相关参数等，具体查看协议 4.10.2 SD Status。</p><h4 id="CSR"><a href="#CSR" class="headerlink" title="CSR"></a>CSR</h4><p>SD卡状态寄存器，Card Status，32 bits，通过 CMD13（SEND_STATUS），从 CMD线读回，response为 R1。描述卡是否发生了什么错误或者处于什么状态，例如 bit [29]，传输设置的块长度是否与卡匹配；bit [27]，擦除目的块无效；bit [25]，卡是否上锁；bit [20]，卡内部控制器是否出错；具体看协议 4.10.2 Card Status。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>技术</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>sdhci</tag>
+      
+      <tag>sd card</tag>
       
     </tags>
     
