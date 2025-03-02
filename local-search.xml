@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>sensor遮黑闪烁问题记录</title>
+    <link href="/xxx/2024/06/sensor%E9%81%AE%E9%BB%91%E9%97%AA%E7%83%81%E9%97%AE%E9%A2%98%E8%AE%B0%E5%BD%95/"/>
+    <url>/xxx/2024/06/sensor%E9%81%AE%E9%BB%91%E9%97%AA%E7%83%81%E9%97%AE%E9%A2%98%E8%AE%B0%E5%BD%95/</url>
+    
+    <content type="html"><![CDATA[<p>最近项目遇到遮黑失败，画面闪烁还偏红的问题，特此记录。</p><p>这里就不附上闪烁的视频了，以下面这张图为例，进行想象吧？！</p><p>具体操作是对画面进行zoom in，缩放到一定倍率后，会切换setting，sensor从binning mode切换进入full size crop mode，进而实现在保持sensor输出分辨率不变化的情况下，对画面进行了2倍放大的操作。属于数码变焦的一种，一般叫in sensor zoom，又叫片上数码变焦。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>技术</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>sensor</tag>
+      
+      <tag>AE闪烁</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>COVID-19 首阳记录</title>
     <link href="/xxx/2024/06/COVID-19_%E9%A6%96%E9%98%B3%E8%AE%B0%E5%BD%95/"/>
     <url>/xxx/2024/06/COVID-19_%E9%A6%96%E9%98%B3%E8%AE%B0%E5%BD%95/</url>
